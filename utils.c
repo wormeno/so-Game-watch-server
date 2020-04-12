@@ -6,11 +6,11 @@
  */
 
 #include"utils.h"
-
+t_log* logger;
 void iniciar_servidor(void)
 {
 	int socket_servidor;
-
+logger = log_create("tp0.log","tp0.c",1, LOG_LEVEL_TRACE);
     struct addrinfo hints, *servinfo, *p;
 
     memset(&hints, 0, sizeof(hints));
@@ -20,6 +20,7 @@ void iniciar_servidor(void)
 
     getaddrinfo(IP, PUERTO, &hints, &servinfo);
 
+log_info(logger,IP);
     for (p=servinfo; p != NULL; p = p->ai_next)
     {
         if ((socket_servidor = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
@@ -64,9 +65,12 @@ void serve_client(int* socket)
 void process_request(int cod_op, int cliente_fd) {
 	int size;
 	void* msg;
+
 		switch (cod_op) {
 		case MENSAJE:
+log_info(logger,"MENSAJE RECIBIDO");
 			msg = recibir_mensaje(cliente_fd, &size);
+log_info(logger,msg);
 			devolver_mensaje(msg, size, cliente_fd);
 			free(msg);
 			break;
@@ -80,7 +84,7 @@ void process_request(int cod_op, int cliente_fd) {
 void* recibir_mensaje(int socket_cliente, int* size)
 {
 	void * buffer;
-
+log_info(logger,"Decodificando Mensaje recibido");
 	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
 	buffer = malloc(*size);
 	recv(socket_cliente, buffer, *size, MSG_WAITALL);
@@ -106,7 +110,7 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 void devolver_mensaje(void* payload, int size, int socket_cliente)
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
-
+log_info(logger,"DEVOLVIENDO MENSAJE");
 	paquete->codigo_operacion = MENSAJE;
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = size;
